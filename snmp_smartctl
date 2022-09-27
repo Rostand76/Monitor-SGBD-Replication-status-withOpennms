@@ -1,0 +1,1 @@
+snmp ALL = NOPASSWD: /usr/local/bin/postgres.sh
