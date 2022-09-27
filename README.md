@@ -49,7 +49,8 @@ To enable the services, you have to restart OpenNMS. When OpenNMS is restarted a
   **3. PostgreSQL**
   
 in this particular case, it was difficult for me to recover the valeu streaming in the master database. So I created a bash script that takes care of going to recover it e later I added to the file /etc/smp/snmpd.conf.
----
+
+```
  #!/bin/bash
  
  check=$(su -c "psql -d postgres -c \"SELECT state FROM pg_stat_replication where state='streaming'\"" postgres | grep streaming)
@@ -59,6 +60,7 @@ in this particular case, it was difficult for me to recover the valeu streaming 
  else
  	echo "0"
  fi
+```
 
  Extend the Net-SNMP agent to run the scripts in /etc/snmpd.conf with
 `extend smart_health /bin/bash -c 'sudo /usr/local/bin/postgres.sh'`
