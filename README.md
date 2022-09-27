@@ -3,27 +3,29 @@ Monitor SGBD replication status with OpenNNMS
 I had this idea to supervise the replication status of my various SGBD in order to be able to quickly intervene in case of problems. Dan this article I did it only our **mariadb mysql** and **postgreql**
 
 **1. Mariadb**
+
    Add in Pollerd  poller-configuration.xml
     
 ```
-**<service name="Mariadb-Replication-Service" interval="30000" user-defined="true" status="on">**
-**     <parameter key="driver" value="org.mariadb.jdbc.Driver"/>**
-**     <parameter key="url" value="jdbc:mysql://OPENNMS_JDBC_HOSTNAME:3306/information_schema"/>**
-**     <parameter key="user" value="my_user"/>**
-**     <parameter key="password" value="my_password"/>**
-**     <parameter key="query" value="SELECT variable_value FROM information_schema.global_status WHERE variable_name='SLAVE_RUNNING'"/>**
-**     <parameter key="column" value="state"/>**
-**     <parameter key="action" value="compare_string"/>**
-**     <parameter key="operator" value="!="/>**
-**     <parameter key="operand" value="ON"/>**
-**     <parameter key="message" value="Replication service not running"/>**
-**  </service>**
+<service name="Mariadb-Replication-Service" interval="30000" user-defined="true" status="on">**
+     <parameter key="driver" value="org.mariadb.jdbc.Driver"/>**
+     <parameter key="url" value="jdbc:mysql://OPENNMS_JDBC_HOSTNAME:3306/information_schema"/>**
+     <parameter key="user" value="my_user"/>**
+     <parameter key="password" value="my_password"/>**
+     <parameter key="query" value="SELECT variable_value FROM information_schema.global_status WHERE variable_name='SLAVE_RUNNING'"/>**
+     <parameter key="column" value="state"/>**
+     <parameter key="action" value="compare_string"/>**
+     <parameter key="operator" value="!="/>**
+     <parameter key="operand" value="ON"/>**
+     <parameter key="message" value="Replication service not running"/>**
+ </service>**
 <monitor service="Mariadb-Replication-Service" class-name="org.opennms.netmgt.poller.monitors.JDBCQueryMonitor"/>
 ```
 To enable the services, you have to restart OpenNMS. When OpenNMS is restarted assign the service *Mariadb-Replication-Service* to an SNMP enabled IP interface of your Node in OpenNMS.
 
 
 **2. mysql**
+
     Add in Pollerd  poller-configuration.xml
 
 ```
@@ -45,17 +47,18 @@ To enable the services, you have to restart OpenNMS. When OpenNMS is restarted a
 
 
   **3. PostgreSQL**
+  
 in this particular case, it was difficult for me to recover the valeu streaming in the master database. So I created a bash script that takes care of going to recover it e later I added to the file /etc/smp/snmpd.conf.
-
-> #!/bin/bash
-> 
-> check=$(su -c "psql -d postgres -c \"SELECT state FROM pg_stat_replication where state='streaming'\"" postgres | grep streaming)
-> 
-> if [ "$check" = "" ]; then
-> 	echo "1"
-> else
-> 	echo "0"
-> fi
+---
+ #!/bin/bash
+ 
+ check=$(su -c "psql -d postgres -c \"SELECT state FROM pg_stat_replication where state='streaming'\"" postgres | grep streaming)
+ 
+ if [ "$check" = "" ]; then
+ 	echo "1"
+ else
+ 	echo "0"
+ fi
 
  Extend the Net-SNMP agent to run the scripts in /etc/snmpd.conf with
 `extend smart_health /bin/bash -c 'sudo /usr/local/bin/postgres.sh'`
